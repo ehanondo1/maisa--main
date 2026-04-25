@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAISA Engineering - Blue Pro</title>
+    <title>MAISA Engineering - Smart HR System Pro</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -18,58 +17,46 @@
         * { box-sizing: border-box; }
         body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; }
 
-        #loginPage { 
-            height: 100vh; display: flex; align-items: center; justify-content: center; 
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-        }
+        #loginPage { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
         .login-box { background: var(--white); padding: 35px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 320px; text-align: center; }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; }
         .login-btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-        .container { max-width: 1050px; margin: auto; background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .container { max-width: 1400px; margin: auto; background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; padding-bottom: 10px; }
-        .header h1 { color: var(--primary); margin: 0; font-size: 22px; }
-
-        .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: #f1f5f9; cursor: pointer; border-radius: 8px; font-weight: 600; color: #64748b; }
+        
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { min-width: 110px; padding: 10px; border: none; background: #f1f5f9; cursor: pointer; border-radius: 8px; font-weight: 600; color: #64748b; font-size: 13px; }
         .tab-btn.active { background: var(--primary); color: white; }
 
-        .table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: white; padding: 5px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background: #f8fafc; color: var(--primary); padding: 10px 5px; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        .table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: white; padding: 15px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
+        th { background: #f8fafc; color: var(--primary); padding: 12px 5px; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 8px 4px; border-bottom: 1px solid #f1f5f9; text-align: center; }
         
-        input, select { font-size: 11px; padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1; }
-
-        .print-section { display: flex; gap: 10px; margin: 15px 0; }
-        .print-btn { 
-            flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; color: white;
-        }
+        input, select { font-size: 11px; padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%; text-align: center; }
+        .row-absent { background-color: #fee2e2 !important; }
+        .readonly-cell { background: #f1f5f9; font-weight: bold; border: none !important; }
+        
+        .btn-group { display: flex; gap: 10px; margin: 10px 0; }
+        .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 12px; }
         .btn-img { background: #475569; }
         .btn-pdf { background: #0f172a; }
-        .icon-sm { width: 16px; height: 16px; filter: invert(1); }
-
-        .developer-tag { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; letter-spacing: 1px; }
+        .btn-save { background: #059669; }
 
         .hidden { display: none !important; }
+        .developer-tag { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; }
 
-        @media print {
-            .no-print, button, .tabs, .logout-btn { display: none !important; }
-            .container { box-shadow: none; border: none; width: 100%; padding: 0; }
-            table { font-size: 10px; }
-            th, td { border: 1px solid #ccc !important; }
-            input, select { border: none !important; background: transparent !important; appearance: none; }
-        }
+        @media print { .no-print { display: none !important; } .container { box-shadow: none; width: 100%; } .table-wrapper { border: none; padding: 0; } }
     </style>
 </head>
 <body>
 
 <div id="loginPage">
     <div class="login-box">
-        <h2 style="margin-top:0">Maisa</h2>
-        <input type="email" id="adminEmail" placeholder="Email">
-        <input type="password" id="adminPass" placeholder="Password">
+        <h2>MAISA ADMIN</h2>
+        <input type="email" id="adminEmail" placeholder="ইমেইল">
+        <input type="password" id="adminPass" placeholder="পাসওয়ার্ড">
         <button class="login-btn" onclick="login()">Log In</button>
         <p id="loginError" style="color:red; font-size:12px;"></p>
     </div>
@@ -78,76 +65,106 @@
 <div id="mainDashboard" class="container hidden">
     <div class="header">
         <h1>MAISA ENGINEERING</h1>
-        <button class="no-print" onclick="logout()" style="background:none; border:1px solid #ccc; padding:4px 8px; border-radius:5px; cursor:pointer; font-size:11px;">Logout</button>
+        <button class="no-print" onclick="logout()" style="background:none; border:1px solid #ccc; padding:5px 10px; border-radius:5px;">Logout</button>
     </div>
 
     <div class="tabs no-print">
-        <button onclick="showPage('daily')" id="tabDaily" class="tab-btn active">Daily Entry</button>
-        <button onclick="showPage('monthly')" id="tabMonthly" class="tab-btn">Monthly Report</button>
+        <button onclick="showPage('daily')" id="tabDaily" class="tab-btn active">Attendance</button>
+        <button onclick="showPage('salary')" id="tabSalary" class="tab-btn">Salary</button>
+        <button onclick="showPage('leave')" id="tabLeave" class="tab-btn">Leave Mgmt</button>
+        <button onclick="showPage('advance')" id="tabAdvance" class="tab-btn">Advance</button>
+        <button onclick="showPage('monthly')" id="tabMonthly" class="tab-btn">Monthly Rpt</button>
     </div>
 
     <div id="dailyPage" class="page">
-        <div class="no-print" style="margin-bottom: 10px;">
-            <input type="date" id="attDate" onchange="loadDailyData()">
-        </div>
-
+        <input type="date" id="attDate" onchange="loadDailyData()" class="no-print" style="width: 150px; margin-bottom:10px;">
         <div id="dailyArea" class="table-wrapper">
-            <table id="dailyTable">
+            <h3 style="text-align:center;">Daily Attendance - <span id="attDispDate"></span></h3>
+            <table>
                 <thead>
-                    <tr>
-                        <th width="30">SI</th>
-                        <th style="text-align:left">Worker Name</th>
-                        <th width="85">Shift</th>
-                        <th width="85">IN</th>
-                        <th width="85">OUT</th>
-                        <th width="100">Status</th>
-                        <th width="40">OT</th>
-                        <th>Notes</th>
-                        <th class="no-print" width="30"></th>
-                    </tr>
+                    <tr><th width="30">SI</th><th style="text-align:left">Worker Name</th><th width="100">Shift</th><th width="80">IN</th><th width="80">OUT</th><th width="60">OT</th><th>Note</th></tr>
                 </thead>
                 <tbody id="dailyBody"></tbody>
             </table>
         </div>
-
-        <div class="print-section no-print">
-            <button class="print-btn btn-img" onclick="saveAsImage('dailyArea')">
-                <img src="https://cdn-icons-png.flaticon.com/512/3342/3342137.png" class="icon-sm"> Save Image
-            </button>
-            <button class="print-btn btn-pdf" onclick="window.print()">
-                <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" class="icon-sm"> Save PDF
-            </button>
+        <div class="btn-group no-print">
+            <button class="btn btn-img" onclick="saveAsImage('dailyArea')">Save Image</button>
+            <button class="btn btn-pdf" onclick="window.print()">Print PDF</button>
         </div>
+    </div>
 
-        <div class="no-print" style="margin-top: 15px; display: flex; gap: 8px; border-top: 1px solid #eee; padding-top: 15px;">
-            <input type="text" id="newWorkerName" placeholder="নতুন শ্রমিকের নাম..." style="flex: 2;">
-            <button onclick="addWorker()" style="background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">➕ Add</button>
+    <div id="salaryPage" class="page hidden">
+        <input type="month" id="salaryMonth" onchange="syncAndRenderSalary()" class="no-print" style="width: 150px; margin-bottom:10px;">
+        <div id="salaryArea" class="table-wrapper">
+            <h3 style="text-align:center;">Payroll Summary - <span class="mName"></span></h3>
+            <table>
+                <thead>
+                    <tr><th>Name</th><th>Basic</th><th>PerDay</th><th>Days</th><th>Hday</th><th>Leave</th><th>Pres.</th><th>Abs.</th><th>Total Attd</th><th>OT Pay</th><th>Adv(-)</th><th style="background:#fff1f2">Payable</th></tr>
+                </thead>
+                <tbody id="salaryBody"></tbody>
+            </table>
+        </div>
+        <div class="btn-group no-print">
+            <button class="btn btn-img" onclick="saveAsImage('salaryArea')">Save Image</button>
+            <button class="btn btn-pdf" onclick="window.print()">Print PDF</button>
+        </div>
+    </div>
+
+    <div id="leavePage" class="page hidden">
+        <input type="month" id="leaveMonth" onchange="renderLeave()" class="no-print" style="width: 150px; margin-bottom:10px;">
+        <div id="leaveArea" class="table-wrapper">
+            <h3 style="text-align:center;">Leave Records - <span class="mName"></span></h3>
+            <table>
+                <thead>
+                    <tr><th>Worker Name</th><th>Prev. Balance</th><th>Earned (+)</th><th>Spent (-)</th><th style="background:#eef2ff">Total Remaining</th></tr>
+                </thead>
+                <tbody id="leaveBody"></tbody>
+            </table>
+        </div>
+        <div class="btn-group no-print">
+            <button class="btn btn-img" onclick="saveAsImage('leaveArea')">Save Image</button>
+            <button class="btn btn-pdf" onclick="window.print()">Print PDF</button>
+        </div>
+    </div>
+
+    <div id="advancePage" class="page hidden">
+        <input type="month" id="advanceMonth" onchange="renderAdvance()" class="no-print" style="width: 150px; margin-bottom:10px;">
+        <div id="advanceArea" class="table-wrapper">
+            <h3 style="text-align:center;">Advance Records - <span class="mName"></span></h3>
+            <table>
+                <thead>
+                    <tr><th>Worker Name</th><th>Prev. Due</th><th>Taken (+)</th><th>Deduction (-)</th><th style="background:#fff1f2">Remaining Due</th></tr>
+                </thead>
+                <tbody id="advanceBody"></tbody>
+            </table>
+        </div>
+        <div class="btn-group no-print">
+            <button class="btn btn-img" onclick="saveAsImage('advanceArea')">Save Image</button>
+            <button class="btn btn-pdf" onclick="window.print()">Print PDF</button>
         </div>
     </div>
 
     <div id="monthlyPage" class="page hidden">
-        <div class="no-print" style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <select id="mWorkerSelect" onchange="renderMonthly()" style="flex:1"></select>
-            <input type="month" id="mMonth" onchange="renderMonthly()" style="flex:1">
+        <div class="no-print" style="display:flex; gap:10px; margin-bottom:10px;">
+            <select id="mWorkerSelect" onchange="renderMonthly()" style="width:180px;"></select>
+            <input type="month" id="mMonth" onchange="renderMonthly()" style="width:150px;">
+            <select id="mCategory" onchange="renderMonthly()" style="width:150px;">
+                <option value="attendance">Attendance</option>
+                <option value="leave">Leave Mgmt</option>
+                <option value="advance">Advance</option>
+                <option value="salary">Salary</option>
+            </select>
         </div>
-        
         <div id="monthlyArea" class="table-wrapper">
-            <h3 id="printWorkerName" style="margin: 5px 0; color: #1e3a8a; font-size: 14px; display: none;">Monthly Report</h3>
+            <h3 id="reportTitle" style="text-align:center;">Monthly Report</h3>
             <table id="monthlyTable">
-                <thead>
-                    <tr><th>Date</th><th>Shift</th><th>IN</th><th>OUT</th><th>Late/Early</th><th>OT</th><th>Note</th></tr>
-                </thead>
+                <thead><tr><th>Date</th><th>Shift</th><th>IN</th><th>OUT</th><th>OT</th><th>Note</th></tr></thead>
                 <tbody id="monthlyBody"></tbody>
             </table>
         </div>
-
-        <div class="print-section no-print">
-            <button class="print-btn btn-img" onclick="saveAsImage('monthlyArea')">
-                <img src="https://cdn-icons-png.flaticon.com/512/3342/3342137.png" class="icon-sm"> Save Image
-            </button>
-            <button class="print-btn btn-pdf" onclick="window.print()">
-                <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" class="icon-sm"> Save PDF
-            </button>
+        <div class="btn-group no-print">
+            <button class="btn btn-img" onclick="saveAsImage('monthlyArea')">Save Image</button>
+            <button class="btn btn-pdf" onclick="window.print()">Print PDF</button>
         </div>
     </div>
 
@@ -155,31 +172,24 @@
 </div>
 
 <script>
-    // Firebase Config
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyA1UR6ffnPvYG7GmPzD0TaujwrC1zdUC6c",
       authDomain: "maisa-engineering.firebaseapp.com",
       projectId: "maisa-engineering",
       storageBucket: "maisa-engineering.firebasestorage.app",
       messagingSenderId: "1080011179433",
-      appId: "1:1080011179433:web:28cc51a76f425c603f70b8",
-      measurementId: "G-F9SV0BF2DV"
+      appId: "1:1080011179433:web:28cc51a76f425c603f70b8"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    const SHIFTS = { 
-        "Morning": { in: "06:00", out: "14:00" }, 
-        "Evening": { in: "14:00", out: "22:00" }, 
-        "Night": { in: "22:00", out: "06:00" },
-        "Common": { in: "08:00", out: "17:00" },
-        "Absent": { in: "", out: "" }
-    };
-
     let workersList = [];
     let dailyData = {};
+    let globalLeave = {};
+    let globalAdv = {};
 
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -193,25 +203,36 @@
     });
 
     async function login() {
-        const email = document.getElementById('adminEmail').value;
-        const pass = document.getElementById('adminPass').value;
-        try { await auth.signInWithEmailAndPassword(email, pass); }
-        catch (e) { document.getElementById('loginError').innerText = "ভুল তথ্য!"; }
+        const e = document.getElementById('adminEmail').value;
+        const p = document.getElementById('adminPass').value;
+        try { await auth.signInWithEmailAndPassword(e, p); } catch(err) { alert("Login Failed!"); }
     }
-
     function logout() { auth.signOut(); }
 
     async function initApp() {
-        document.getElementById('attDate').valueAsDate = new Date();
-        document.getElementById('mMonth').value = new Date().toISOString().slice(0,7);
+        const now = new Date();
+        const monthStr = now.toISOString().slice(0,7);
+        document.getElementById('attDate').valueAsDate = now;
+        ['salaryMonth', 'leaveMonth', 'advanceMonth', 'mMonth'].forEach(id => document.getElementById(id).value = monthStr);
+        
         const doc = await db.collection("settings").doc("workers").get();
         workersList = doc.exists ? doc.data().list : [];
         loadDailyData();
     }
 
+    function formatAMPM(time) {
+        if(!time) return '-';
+        let [h, m] = time.split(':');
+        h = parseInt(h);
+        let ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${h}:${m} ${ampm}`;
+    }
+
+    // --- Attendance Logic ---
     async function loadDailyData() {
         const date = document.getElementById('attDate').value;
-        if(!date) return;
+        document.getElementById('attDispDate').innerText = date;
         const doc = await db.collection("attendance").doc(date).get();
         dailyData = doc.exists ? doc.data() : {};
         renderDaily();
@@ -221,142 +242,244 @@
         const tbody = document.getElementById('dailyBody');
         tbody.innerHTML = '';
         workersList.sort().forEach((name, i) => {
-            if (!dailyData[name]) {
-                dailyData[name] = { shift: "Common", in: "08:00", out: "17:00", ot: 0, late: "No", note: "" };
-            }
-            const d = dailyData[name];
+            const d = dailyData[name] || { shift: "Common", in: "08:00", out: "17:00", ot: 0, note: "" };
             const isAb = d.shift === "Absent";
             tbody.innerHTML += `
                 <tr class="${isAb ? 'row-absent' : ''}">
                     <td>${i+1}</td>
                     <td style="text-align:left"><b>${name}</b></td>
-                    <td>
-                        <select onchange="updateShift('${name}', this.value)">
-                            ${Object.keys(SHIFTS).map(s => `<option value="${s}" ${d.shift===s?'selected':''}>${s}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td><input type="time" value="${d.in}" ${isAb?'disabled':''} onchange="updateVal('${name}','in',this.value)"></td>
-                    <td><input type="time" value="${d.out}" ${isAb?'disabled':''} onchange="updateVal('${name}','out',this.value)"></td>
-                    <td><span style="color:${d.late==='No'?'#27ae60':'#e74c3c'}; font-weight:bold">${isAb ? '-' : d.late}</span></td>
-                    <td><input type="number" step="0.1" value="${d.ot}" ${isAb?'disabled':''} style="width:40px" onchange="updateVal('${name}','ot',this.value)"></td>
-                    <td><input type="text" placeholder="..." value="${d.note || ''}" style="width:100%" onchange="updateVal('${name}','note',this.value)"></td>
-                    <td class="no-print"><button onclick="deleteWorker(${i})" style="color:#ccc; border:none; background:none; cursor:pointer;">✖</button></td>
+                    <td><select onchange="updateShift('${name}', this.value)">
+                        <option value="Common" ${d.shift=='Common'?'selected':''}>Common</option>
+                        <option value="Morning" ${d.shift=='Morning'?'selected':''}>Morning</option>
+                        <option value="Evening" ${d.shift=='Evening'?'selected':''}>Evening</option>
+                        <option value="Leave" ${d.shift=='Leave'?'selected':''}>Leave</option>
+                        <option value="Absent" ${d.shift=='Absent'?'selected':''}>Absent</option>
+                    </select></td>
+                    <td><input type="time" value="${d.in}" onchange="updateVal('${name}','in',this.value)" ${isAb?'disabled':''}></td>
+                    <td><input type="time" value="${d.out}" onchange="updateVal('${name}','out',this.value)" ${isAb?'disabled':''}></td>
+                    <td><input type="number" step="0.1" value="${d.ot}" onchange="updateVal('${name}','ot',this.value)" ${isAb?'disabled':''}></td>
+                    <td><input type="text" value="${d.note||''}" onchange="updateVal('${name}','note',this.value)"></td>
                 </tr>`;
         });
     }
 
-    function updateShift(name, shift) {
-        dailyData[name].shift = shift;
-        if(shift === "Absent") {
-            dailyData[name].in = ""; dailyData[name].out = ""; dailyData[name].ot = 0; dailyData[name].late = "-";
-        } else {
-            dailyData[name].in = SHIFTS[shift].in;
-            dailyData[name].out = SHIFTS[shift].out;
-            autoCalculate(name);
-        }
-        saveData();
+    async function updateShift(n, s) {
+        if(!dailyData[n]) dailyData[n] = {};
+        dailyData[n].shift = s;
+        if(s==='Common') { dailyData[n].in="08:00"; dailyData[n].out="17:00"; }
+        else if(s==='Morning') { dailyData[n].in="06:00"; dailyData[n].out="14:00"; }
+        else if(s==='Evening') { dailyData[n].in="14:00"; dailyData[n].out="22:00"; }
+        else { dailyData[n].in=""; dailyData[n].out=""; dailyData[n].ot=0; }
+        await db.collection("attendance").doc(document.getElementById('attDate').value).set(dailyData);
         renderDaily();
     }
 
-    function updateVal(name, field, val) {
-        dailyData[name][field] = val;
-        autoCalculate(name);
-        saveData();
-        if(field === 'in' || field === 'out') renderDaily();
+    async function updateVal(n, f, v) {
+        if(!dailyData[n]) dailyData[n] = {};
+        dailyData[n][f] = v;
+        await db.collection("attendance").doc(document.getElementById('attDate').value).set(dailyData);
     }
 
-    function autoCalculate(name) {
-        let d = dailyData[name];
-        if(d.shift === "Absent" || !d.in) return;
-        let schedIn = SHIFTS[d.shift].in;
-        let schedOut = SHIFTS[d.shift].out;
-        let logs = [];
-        if (d.in > schedIn) {
-            let s = new Date("2026-01-01 " + schedIn);
-            let a = new Date("2026-01-01 " + d.in);
-            let diff = Math.round((a - s) / (1000 * 60));
-            if(diff > 0) logs.push("L:" + diff + "m");
-        }
-        if (d.out && d.out < schedOut && d.shift !== "Night") {
-            let s = new Date("2026-01-01 " + schedOut);
-            let a = new Date("2026-01-01 " + d.out);
-            let diff = Math.round((s - a) / (1000 * 60));
-            if(diff > 0) logs.push("E:" + diff + "m");
-        }
-        d.late = logs.length > 0 ? logs.join(",") : "No";
-        if (d.in && d.out) {
-            let start = new Date("2026-01-01 " + d.in);
-            let end = new Date("2026-01-01 " + d.out);
-            if (end < start) end.setDate(end.getDate() + 1);
-            let hrs = (end - start) / (1000 * 60 * 60);
-            d.ot = hrs > 9 ? (hrs - 9).toFixed(1) : 0;
-        }
-    }
+    // --- Leave Logic ---
+    async function renderLeave() {
+        const month = document.getElementById('leaveMonth').value;
+        document.querySelectorAll('.mName').forEach(el => el.innerText = month);
+        const tbody = document.getElementById('leaveBody');
+        tbody.innerHTML = '';
 
-    async function saveData() {
-        const date = document.getElementById('attDate').value;
-        if(!date) return;
-        await db.collection("attendance").doc(date).set(dailyData);
-    }
+        let prevMonthDate = new Date(month + '-01');
+        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+        let prevMonthStr = prevMonthDate.toISOString().slice(0,7);
 
-    // ইমেজ হিসেবে সেভ করার ফাংশন
-    function saveAsImage(divId) {
-        const element = document.getElementById(divId);
-        html2canvas(element, {
-            scale: 2, // ভালো রেজুলেশন এর জন্য
-            backgroundColor: "#ffffff"
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = divId + '-' + new Date().toLocaleDateString() + '.png';
-            link.href = canvas.toDataURL("image/png");
-            link.click();
+        const prevSnap = await db.collection("leaveData").doc(prevMonthStr).get();
+        const currSnap = await db.collection("leaveData").doc(month).get();
+        const prevData = prevSnap.exists ? prevSnap.data() : {};
+        const currData = currSnap.exists ? currSnap.data() : {};
+
+        workersList.sort().forEach((name, i) => {
+            const pBal = prevData[name]?.total || 0;
+            const d = currData[name] || { earned: 1, spent: 0 };
+            const total = (parseFloat(pBal) + parseFloat(d.earned)) - parseFloat(d.spent);
+            globalLeave[name] = d.spent;
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${name}</b></td>
+                    <td><input type="number" value="${pBal}" class="readonly-cell" readonly></td>
+                    <td><input type="number" id="le_${i}" value="${d.earned}" oninput="updateL('${name}', ${i})"></td>
+                    <td><input type="number" id="ls_${i}" value="${d.spent}" oninput="updateL('${name}', ${i})"></td>
+                    <td><input type="number" id="lt_${i}" value="${total}" class="readonly-cell" readonly></td>
+                </tr>`;
         });
     }
 
-    async function addWorker() {
-        const name = document.getElementById('newWorkerName').value.trim();
-        if(name && !workersList.includes(name)) {
-            workersList.push(name);
-            await db.collection("settings").doc("workers").set({list: workersList});
-            document.getElementById('newWorkerName').value = '';
-            loadDailyData();
+    async function updateL(name, i) {
+        const month = document.getElementById('leaveMonth').value;
+        const e = document.getElementById(`le_${i}`).value;
+        const s = document.getElementById(`ls_${i}`).value;
+        const p = parseFloat(document.querySelectorAll('#leaveBody tr')[i].cells[1].querySelector('input').value);
+        const total = (p + parseFloat(e)) - parseFloat(s);
+        document.getElementById(`lt_${i}`).value = total;
+        await db.collection("leaveData").doc(month).set({ [name]: { earned: e, spent: s, total: total } }, {merge: true});
+        globalLeave[name] = s;
+    }
+
+    // --- Advance Logic ---
+    async function renderAdvance() {
+        const month = document.getElementById('advanceMonth').value;
+        const tbody = document.getElementById('advanceBody');
+        tbody.innerHTML = '';
+
+        let prevMonthDate = new Date(month + '-01');
+        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+        let prevMonthStr = prevMonthDate.toISOString().slice(0,7);
+
+        const prevSnap = await db.collection("advData").doc(prevMonthStr).get();
+        const currSnap = await db.collection("advData").doc(month).get();
+        const prevData = prevSnap.exists ? prevSnap.data() : {};
+        const currData = currSnap.exists ? currSnap.data() : {};
+
+        workersList.sort().forEach((name, i) => {
+            const pDue = prevData[name]?.rem || 0;
+            const d = currData[name] || { taken: 0, ded: 0 };
+            const rem = (parseFloat(pDue) + parseFloat(d.taken)) - parseFloat(d.ded);
+            globalAdv[name] = d.ded;
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${name}</b></td>
+                    <td><input type="number" value="${pDue}" class="readonly-cell" readonly></td>
+                    <td><input type="number" id="at_${i}" value="${d.taken}" oninput="updateA('${name}', ${i})"></td>
+                    <td><input type="number" id="ad_${i}" value="${d.ded}" oninput="updateA('${name}', ${i})"></td>
+                    <td><input type="number" id="ar_${i}" value="${rem}" class="readonly-cell" readonly></td>
+                </tr>`;
+        });
+    }
+
+    async function updateA(name, i) {
+        const month = document.getElementById('advanceMonth').value;
+        const t = document.getElementById(`at_${i}`).value;
+        const d = document.getElementById(`ad_${i}`).value;
+        const p = parseFloat(document.querySelectorAll('#advanceBody tr')[i].cells[1].querySelector('input').value);
+        const rem = (p + parseFloat(t)) - parseFloat(d);
+        document.getElementById(`ar_${i}`).value = rem;
+        await db.collection("advData").doc(month).set({ [name]: { taken: t, ded: d, rem: rem } }, {merge: true});
+        globalAdv[name] = d;
+    }
+
+    // --- Salary Sync ---
+    async function syncAndRenderSalary() {
+        await renderLeave();
+        await renderAdvance();
+        const month = document.getElementById('salaryMonth').value;
+        const [y, m] = month.split('-');
+        const days = new Date(y, m, 0).getDate();
+        const tbody = document.getElementById('salaryBody');
+        tbody.innerHTML = '';
+
+        workersList.sort().forEach((name, i) => {
+            const lValue = globalLeave[name] || 0;
+            const aValue = globalAdv[name] || 0;
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${name}</b></td>
+                    <td><input type="number" id="s_base_${i}" oninput="calcS(${i}, ${days})"></td>
+                    <td><input type="text" id="s_pd_${i}" class="readonly-cell" readonly></td>
+                    <td>${days}</td>
+                    <td><input type="number" id="s_hd_${i}" value="0" oninput="calcS(${i}, ${days})"></td>
+                    <td><input type="number" id="s_lv_${i}" value="${lValue}" class="readonly-cell" readonly></td>
+                    <td><input type="number" id="s_pr_${i}" value="0" oninput="calcS(${i}, ${days})"></td>
+                    <td><input type="number" id="s_ab_${i}" value="0" oninput="calcS(${i}, ${days})"></td>
+                    <td><input type="text" id="s_ta_${i}" class="readonly-cell" readonly></td>
+                    <td><input type="text" id="s_otp_${i}" class="readonly-cell" value="0.00" readonly></td>
+                    <td><input type="number" id="s_adv_${i}" value="${aValue}" class="readonly-cell" readonly></td>
+                    <td><input type="text" id="s_np_${i}" class="readonly-cell" style="color:red" readonly></td>
+                </tr>`;
+        });
+    }
+
+    function calcS(i, days) {
+        const base = parseFloat(document.getElementById(`s_base_${i}`).value) || 0;
+        const hd = parseFloat(document.getElementById(`s_hd_${i}`).value) || 0;
+        const lv = parseFloat(document.getElementById(`s_lv_${i}`).value) || 0;
+        const pr = parseFloat(document.getElementById(`s_pr_${i}`).value) || 0;
+        const ab = parseFloat(document.getElementById(`s_ab_${i}`).value) || 0;
+        const adv = parseFloat(document.getElementById(`s_adv_${i}`).value) || 0;
+        const pd = base / days;
+        const ta = (hd + lv + pr) - ab;
+        const net = (pd * ta) - adv;
+        document.getElementById(`s_pd_${i}`).value = pd.toFixed(2);
+        document.getElementById(`s_ta_${i}`).value = ta;
+        document.getElementById(`s_np_${i}`).value = net.toFixed(2);
+    }
+
+    // --- Monthly Report (Category Filter) ---
+    async function renderMonthly() {
+        const w = document.getElementById('mWorkerSelect').value;
+        const m = document.getElementById('mMonth').value;
+        const cat = document.getElementById('mCategory').value;
+        
+        let catName = "Attendance";
+        if(cat === 'leave') catName = "Leave";
+        if(cat === 'advance') catName = "Advance";
+        if(cat === 'salary') catName = "Salary";
+
+        document.getElementById('reportTitle').innerText = `Report: ${w} (${m}) - ${catName}`;
+        
+        const thead = document.querySelector('#monthlyTable thead');
+        const tbody = document.getElementById('monthlyBody');
+        tbody.innerHTML = '';
+
+        if(cat === 'attendance') {
+            thead.innerHTML = `<tr><th>Date</th><th>Shift</th><th>IN</th><th>OUT</th><th>OT</th><th>Note</th></tr>`;
+            const snap = await db.collection("attendance").get();
+            let records = [];
+            snap.forEach(doc => { if(doc.id.startsWith(m) && doc.data()[w]) records.push({ date: doc.id, ...doc.data()[w] }); });
+            records.sort((a,b) => a.date.localeCompare(b.date)).forEach(r => {
+                tbody.innerHTML += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${formatAMPM(r.in)}</td><td>${formatAMPM(r.out)}</td><td>${r.ot}</td><td>${r.note||''}</td></tr>`;
+            });
+        } 
+        else if(cat === 'leave') {
+            thead.innerHTML = `<tr><th>Description</th><th>Days</th></tr>`;
+            const snap = await db.collection("leaveData").doc(m).get();
+            const d = snap.exists && snap.data()[w] ? snap.data()[w] : { earned: 0, spent: 0, total: 0 };
+            tbody.innerHTML += `<tr><td>Earned this month (+)</td><td>${d.earned||0}</td></tr>`;
+            tbody.innerHTML += `<tr><td>Spent this month (-)</td><td>${d.spent||0}</td></tr>`;
+            tbody.innerHTML += `<tr style="background:#eef2ff"><td><b>Total Remaining</b></td><td><b>${d.total||0}</b></td></tr>`;
+        }
+        else if(cat === 'advance') {
+            thead.innerHTML = `<tr><th>Description</th><th>Amount</th></tr>`;
+            const snap = await db.collection("advData").doc(m).get();
+            const d = snap.exists && snap.data()[w] ? snap.data()[w] : { taken: 0, ded: 0, rem: 0 };
+            tbody.innerHTML += `<tr><td>Taken this month (+)</td><td>${d.taken||0}</td></tr>`;
+            tbody.innerHTML += `<tr><td>Deduction (-)</td><td>${d.ded||0}</td></tr>`;
+            tbody.innerHTML += `<tr style="background:#fff1f2"><td><b>Remaining Due</b></td><td><b>${d.rem||0}</b></td></tr>`;
+        }
+        else if(cat === 'salary') {
+            thead.innerHTML = `<tr><th>Notice</th></tr>`;
+            tbody.innerHTML += `<tr><td>Please check the main 'Salary' tab for full payroll calculation.</td></tr>`;
         }
     }
 
-    async function deleteWorker(idx) {
-        if(confirm("বাদ দিবেন?")) {
-            const name = workersList.sort()[idx];
-            workersList = workersList.filter(n => n !== name);
-            await db.collection("settings").doc("workers").set({list: workersList});
-            renderDaily();
-        }
-    }
-
+    // Navigation & Export
     function showPage(p) {
         document.querySelectorAll('.page').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(p + 'Page').classList.remove('hidden');
         document.getElementById('tab' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
+        if(p === 'salary') syncAndRenderSalary();
+        if(p === 'leave') renderLeave();
+        if(p === 'advance') renderAdvance();
         if(p === 'monthly') {
             document.getElementById('mWorkerSelect').innerHTML = workersList.sort().map(w => `<option value="${w}">${w}</option>`).join('');
             renderMonthly();
         }
     }
 
-    async function renderMonthly() {
-        const worker = document.getElementById('mWorkerSelect').value;
-        const month = document.getElementById('mMonth').value;
-        const tbody = document.getElementById('monthlyBody');
-        document.getElementById('printWorkerName').innerText = "Report of " + worker + " (" + month + ")";
-        document.getElementById('printWorkerName').style.display = "block";
-        tbody.innerHTML = '';
-        const snap = await db.collection("attendance").get();
-        let records = [];
-        snap.forEach(doc => {
-            if(doc.id.startsWith(month) && doc.data()[worker]) records.push({id: doc.id, ...doc.data()[worker]});
-        });
-        records.sort((a,b) => a.id.localeCompare(b.id)).forEach(d => {
-            tbody.innerHTML += `<tr><td>${d.id}</td><td>${d.shift}</td><td>${d.in||'-'}</td><td>${d.out||'-'}</td><td>${d.late}</td><td>${d.ot}</td><td>${d.note||''}</td></tr>`;
+    function saveAsImage(id) {
+        html2canvas(document.getElementById(id), { scale: 2, useCORS: true }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = id + '_' + new Date().getTime() + '.png';
+            link.href = canvas.toDataURL();
+            link.click();
         });
     }
 </script>
