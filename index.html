@@ -1,1 +1,364 @@
 
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAISA Engineering - Blue Pro</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --primary: #1e3a8a; --secondary: #3b82f6; --bg: #f8fafc; --white: #ffffff; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; }
+
+        #loginPage { 
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        .login-box { background: var(--white); padding: 35px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 320px; text-align: center; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .login-btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        .container { max-width: 1050px; margin: auto; background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; padding-bottom: 10px; }
+        .header h1 { color: var(--primary); margin: 0; font-size: 22px; }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: #f1f5f9; cursor: pointer; border-radius: 8px; font-weight: 600; color: #64748b; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: white; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #f8fafc; color: var(--primary); padding: 10px 5px; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        
+        input, select { font-size: 11px; padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1; }
+
+        .print-section { display: flex; gap: 10px; margin: 15px 0; }
+        .print-btn { 
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; color: white;
+        }
+        .btn-img { background: #475569; }
+        .btn-pdf { background: #0f172a; }
+        .icon-sm { width: 16px; height: 16px; filter: invert(1); }
+
+        .developer-tag { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; letter-spacing: 1px; }
+
+        .hidden { display: none !important; }
+
+        @media print {
+            .no-print, button, .tabs, .logout-btn { display: none !important; }
+            .container { box-shadow: none; border: none; width: 100%; padding: 0; }
+            table { font-size: 10px; }
+            th, td { border: 1px solid #ccc !important; }
+            input, select { border: none !important; background: transparent !important; appearance: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginPage">
+    <div class="login-box">
+        <h2 style="margin-top:0">MAISA ADMIN</h2>
+        <input type="email" id="adminEmail" placeholder="Email">
+        <input type="password" id="adminPass" placeholder="Password">
+        <button class="login-btn" onclick="login()">Log In</button>
+        <p id="loginError" style="color:red; font-size:12px;"></p>
+    </div>
+</div>
+
+<div id="mainDashboard" class="container hidden">
+    <div class="header">
+        <h1>MAISA ENGINEERING</h1>
+        <button class="no-print" onclick="logout()" style="background:none; border:1px solid #ccc; padding:4px 8px; border-radius:5px; cursor:pointer; font-size:11px;">Logout</button>
+    </div>
+
+    <div class="tabs no-print">
+        <button onclick="showPage('daily')" id="tabDaily" class="tab-btn active">Daily Entry</button>
+        <button onclick="showPage('monthly')" id="tabMonthly" class="tab-btn">Monthly Report</button>
+    </div>
+
+    <div id="dailyPage" class="page">
+        <div class="no-print" style="margin-bottom: 10px;">
+            <input type="date" id="attDate" onchange="loadDailyData()">
+        </div>
+
+        <div id="dailyArea" class="table-wrapper">
+            <table id="dailyTable">
+                <thead>
+                    <tr>
+                        <th width="30">SI</th>
+                        <th style="text-align:left">Worker Name</th>
+                        <th width="85">Shift</th>
+                        <th width="85">IN</th>
+                        <th width="85">OUT</th>
+                        <th width="100">Status</th>
+                        <th width="40">OT</th>
+                        <th>Notes</th>
+                        <th class="no-print" width="30"></th>
+                    </tr>
+                </thead>
+                <tbody id="dailyBody"></tbody>
+            </table>
+        </div>
+
+        <div class="print-section no-print">
+            <button class="print-btn btn-img" onclick="saveAsImage('dailyArea')">
+                <img src="https://cdn-icons-png.flaticon.com/512/3342/3342137.png" class="icon-sm"> Save Image
+            </button>
+            <button class="print-btn btn-pdf" onclick="window.print()">
+                <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" class="icon-sm"> Save PDF
+            </button>
+        </div>
+
+        <div class="no-print" style="margin-top: 15px; display: flex; gap: 8px; border-top: 1px solid #eee; padding-top: 15px;">
+            <input type="text" id="newWorkerName" placeholder="নতুন শ্রমিকের নাম..." style="flex: 2;">
+            <button onclick="addWorker()" style="background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">➕ Add</button>
+        </div>
+    </div>
+
+    <div id="monthlyPage" class="page hidden">
+        <div class="no-print" style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <select id="mWorkerSelect" onchange="renderMonthly()" style="flex:1"></select>
+            <input type="month" id="mMonth" onchange="renderMonthly()" style="flex:1">
+        </div>
+        
+        <div id="monthlyArea" class="table-wrapper">
+            <h3 id="printWorkerName" style="margin: 5px 0; color: #1e3a8a; font-size: 14px; display: none;">Monthly Report</h3>
+            <table id="monthlyTable">
+                <thead>
+                    <tr><th>Date</th><th>Shift</th><th>IN</th><th>OUT</th><th>Late/Early</th><th>OT</th><th>Note</th></tr>
+                </thead>
+                <tbody id="monthlyBody"></tbody>
+            </table>
+        </div>
+
+        <div class="print-section no-print">
+            <button class="print-btn btn-img" onclick="saveAsImage('monthlyArea')">
+                <img src="https://cdn-icons-png.flaticon.com/512/3342/3342137.png" class="icon-sm"> Save Image
+            </button>
+            <button class="print-btn btn-pdf" onclick="window.print()">
+                <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" class="icon-sm"> Save PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="developer-tag">DEVELOPED BY: EH AANONDO</div>
+</div>
+
+<script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA1UR6ffnPvYG7GmPzD0TaujwrC1zdUC6c",
+      authDomain: "maisa-engineering.firebaseapp.com",
+      projectId: "maisa-engineering",
+      storageBucket: "maisa-engineering.firebasestorage.app",
+      messagingSenderId: "1080011179433",
+      appId: "1:1080011179433:web:28cc51a76f425c603f70b8",
+      measurementId: "G-F9SV0BF2DV"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const SHIFTS = { 
+        "Morning": { in: "06:00", out: "14:00" }, 
+        "Evening": { in: "14:00", out: "22:00" }, 
+        "Night": { in: "22:00", out: "06:00" },
+        "Common": { in: "08:00", out: "17:00" },
+        "Absent": { in: "", out: "" }
+    };
+
+    let workersList = [];
+    let dailyData = {};
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            initApp();
+        } else {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('mainDashboard').classList.add('hidden');
+        }
+    });
+
+    async function login() {
+        const email = document.getElementById('adminEmail').value;
+        const pass = document.getElementById('adminPass').value;
+        try { await auth.signInWithEmailAndPassword(email, pass); }
+        catch (e) { document.getElementById('loginError').innerText = "ভুল তথ্য!"; }
+    }
+
+    function logout() { auth.signOut(); }
+
+    async function initApp() {
+        document.getElementById('attDate').valueAsDate = new Date();
+        document.getElementById('mMonth').value = new Date().toISOString().slice(0,7);
+        const doc = await db.collection("settings").doc("workers").get();
+        workersList = doc.exists ? doc.data().list : [];
+        loadDailyData();
+    }
+
+    async function loadDailyData() {
+        const date = document.getElementById('attDate').value;
+        if(!date) return;
+        const doc = await db.collection("attendance").doc(date).get();
+        dailyData = doc.exists ? doc.data() : {};
+        renderDaily();
+    }
+
+    function renderDaily() {
+        const tbody = document.getElementById('dailyBody');
+        tbody.innerHTML = '';
+        workersList.sort().forEach((name, i) => {
+            if (!dailyData[name]) {
+                dailyData[name] = { shift: "Common", in: "08:00", out: "17:00", ot: 0, late: "No", note: "" };
+            }
+            const d = dailyData[name];
+            const isAb = d.shift === "Absent";
+            tbody.innerHTML += `
+                <tr class="${isAb ? 'row-absent' : ''}">
+                    <td>${i+1}</td>
+                    <td style="text-align:left"><b>${name}</b></td>
+                    <td>
+                        <select onchange="updateShift('${name}', this.value)">
+                            ${Object.keys(SHIFTS).map(s => `<option value="${s}" ${d.shift===s?'selected':''}>${s}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td><input type="time" value="${d.in}" ${isAb?'disabled':''} onchange="updateVal('${name}','in',this.value)"></td>
+                    <td><input type="time" value="${d.out}" ${isAb?'disabled':''} onchange="updateVal('${name}','out',this.value)"></td>
+                    <td><span style="color:${d.late==='No'?'#27ae60':'#e74c3c'}; font-weight:bold">${isAb ? '-' : d.late}</span></td>
+                    <td><input type="number" step="0.1" value="${d.ot}" ${isAb?'disabled':''} style="width:40px" onchange="updateVal('${name}','ot',this.value)"></td>
+                    <td><input type="text" placeholder="..." value="${d.note || ''}" style="width:100%" onchange="updateVal('${name}','note',this.value)"></td>
+                    <td class="no-print"><button onclick="deleteWorker(${i})" style="color:#ccc; border:none; background:none; cursor:pointer;">✖</button></td>
+                </tr>`;
+        });
+    }
+
+    function updateShift(name, shift) {
+        dailyData[name].shift = shift;
+        if(shift === "Absent") {
+            dailyData[name].in = ""; dailyData[name].out = ""; dailyData[name].ot = 0; dailyData[name].late = "-";
+        } else {
+            dailyData[name].in = SHIFTS[shift].in;
+            dailyData[name].out = SHIFTS[shift].out;
+            autoCalculate(name);
+        }
+        saveData();
+        renderDaily();
+    }
+
+    function updateVal(name, field, val) {
+        dailyData[name][field] = val;
+        autoCalculate(name);
+        saveData();
+        if(field === 'in' || field === 'out') renderDaily();
+    }
+
+    function autoCalculate(name) {
+        let d = dailyData[name];
+        if(d.shift === "Absent" || !d.in) return;
+        let schedIn = SHIFTS[d.shift].in;
+        let schedOut = SHIFTS[d.shift].out;
+        let logs = [];
+        if (d.in > schedIn) {
+            let s = new Date("2026-01-01 " + schedIn);
+            let a = new Date("2026-01-01 " + d.in);
+            let diff = Math.round((a - s) / (1000 * 60));
+            if(diff > 0) logs.push("L:" + diff + "m");
+        }
+        if (d.out && d.out < schedOut && d.shift !== "Night") {
+            let s = new Date("2026-01-01 " + schedOut);
+            let a = new Date("2026-01-01 " + d.out);
+            let diff = Math.round((s - a) / (1000 * 60));
+            if(diff > 0) logs.push("E:" + diff + "m");
+        }
+        d.late = logs.length > 0 ? logs.join(",") : "No";
+        if (d.in && d.out) {
+            let start = new Date("2026-01-01 " + d.in);
+            let end = new Date("2026-01-01 " + d.out);
+            if (end < start) end.setDate(end.getDate() + 1);
+            let hrs = (end - start) / (1000 * 60 * 60);
+            d.ot = hrs > 9 ? (hrs - 9).toFixed(1) : 0;
+        }
+    }
+
+    async function saveData() {
+        const date = document.getElementById('attDate').value;
+        if(!date) return;
+        await db.collection("attendance").doc(date).set(dailyData);
+    }
+
+    // ইমেজ হিসেবে সেভ করার ফাংশন
+    function saveAsImage(divId) {
+        const element = document.getElementById(divId);
+        html2canvas(element, {
+            scale: 2, // ভালো রেজুলেশন এর জন্য
+            backgroundColor: "#ffffff"
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = divId + '-' + new Date().toLocaleDateString() + '.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+    }
+
+    async function addWorker() {
+        const name = document.getElementById('newWorkerName').value.trim();
+        if(name && !workersList.includes(name)) {
+            workersList.push(name);
+            await db.collection("settings").doc("workers").set({list: workersList});
+            document.getElementById('newWorkerName').value = '';
+            loadDailyData();
+        }
+    }
+
+    async function deleteWorker(idx) {
+        if(confirm("বাদ দিবেন?")) {
+            const name = workersList.sort()[idx];
+            workersList = workersList.filter(n => n !== name);
+            await db.collection("settings").doc("workers").set({list: workersList});
+            renderDaily();
+        }
+    }
+
+    function showPage(p) {
+        document.querySelectorAll('.page').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(p + 'Page').classList.remove('hidden');
+        document.getElementById('tab' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
+        if(p === 'monthly') {
+            document.getElementById('mWorkerSelect').innerHTML = workersList.sort().map(w => `<option value="${w}">${w}</option>`).join('');
+            renderMonthly();
+        }
+    }
+
+    async function renderMonthly() {
+        const worker = document.getElementById('mWorkerSelect').value;
+        const month = document.getElementById('mMonth').value;
+        const tbody = document.getElementById('monthlyBody');
+        document.getElementById('printWorkerName').innerText = "Report of " + worker + " (" + month + ")";
+        document.getElementById('printWorkerName').style.display = "block";
+        tbody.innerHTML = '';
+        const snap = await db.collection("attendance").get();
+        let records = [];
+        snap.forEach(doc => {
+            if(doc.id.startsWith(month) && doc.data()[worker]) records.push({id: doc.id, ...doc.data()[worker]});
+        });
+        records.sort((a,b) => a.id.localeCompare(b.id)).forEach(d => {
+            tbody.innerHTML += `<tr><td>${d.id}</td><td>${d.shift}</td><td>${d.in||'-'}</td><td>${d.out||'-'}</td><td>${d.late}</td><td>${d.ot}</td><td>${d.note||''}</td></tr>`;
+        });
+    }
+</script>
+</body>
+</html>
