@@ -35,7 +35,10 @@
         td { padding: 8px 4px; border-bottom: 1px solid #f1f5f9; text-align: center; }
         
         input, select { font-size: 11px; padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%; text-align: center; }
+        
+        /* Row Colors */
         .row-absent { background-color: #fee2e2 !important; }
+        .row-present { background-color: #dcfce7 !important; }
         .readonly-cell { background: #f1f5f9; font-weight: bold; border: none !important; color: #1e3a8a; }
         
         .btn-group { display: flex; gap: 10px; margin: 10px 0; }
@@ -90,7 +93,7 @@
             <h3 style="text-align:center;">Daily Attendance - <span id="attDispDate"></span></h3>
             <table>
                 <thead>
-                    <tr><th width="30">SI</th><th style="text-align:left">Worker Name</th><th width="100">Shift</th><th width="80">IN</th><th width="80">OUT</th><th width="60">OT</th><th>Note</th></tr>
+                    <tr><th width="30">SI</th><th style="text-align:left">Worker Name</th><th width="100">Shift</th><th width="80">IN</th><th width="80">OUT</th><th width="60">Late</th><th width="60">OT</th><th>Note</th></tr>
                 </thead>
                 <tbody id="dailyBody"></tbody>
             </table>
@@ -249,10 +252,14 @@
         const tbody = document.getElementById('dailyBody');
         tbody.innerHTML = '';
         workersList.sort().forEach((name, i) => {
-            const d = dailyData[name] || { shift: "Common", in: "08:00", out: "17:00", ot: 0, note: "" };
+            const d = dailyData[name] || { shift: "Common", in: "08:00", out: "17:00", late: "", ot: 0, note: "" };
+            
             const isAb = d.shift === "Absent";
+            const isPr = ['Common', 'Morning', 'Evening'].includes(d.shift);
+            const rowClass = isAb ? 'row-absent' : (isPr ? 'row-present' : '');
+
             tbody.innerHTML += `
-                <tr class="${isAb ? 'row-absent' : ''}">
+                <tr class="${rowClass}">
                     <td>${i+1}</td>
                     <td style="text-align:left"><b>${name}</b></td>
                     <td><select onchange="updateShift('${name}', this.value)">
@@ -264,6 +271,7 @@
                     </select></td>
                     <td><input type="time" value="${d.in}" onchange="updateVal('${name}','in',this.value)" ${isAb?'disabled':''}></td>
                     <td><input type="time" value="${d.out}" onchange="updateVal('${name}','out',this.value)" ${isAb?'disabled':''}></td>
+                    <td><input type="text" value="${d.late||''}" placeholder="0m" onchange="updateVal('${name}','late',this.value)" ${isAb?'disabled':''}></td>
                     <td><input type="number" step="0.1" value="${d.ot}" onchange="updateVal('${name}','ot',this.value)" ${isAb?'disabled':''}></td>
                     <td><input type="text" value="${d.note||''}" onchange="updateVal('${name}','note',this.value)"></td>
                 </tr>`;
@@ -273,6 +281,7 @@
     async function updateShift(n, s) {
         if(!dailyData[n]) dailyData[n] = {};
         dailyData[n].shift = s;
+        dailyData[n].late = ""; 
         if(s==='Common') { dailyData[n].in="08:00"; dailyData[n].out="17:00"; }
         else if(s==='Morning') { dailyData[n].in="06:00"; dailyData[n].out="14:00"; }
         else if(s==='Evening') { dailyData[n].in="14:00"; dailyData[n].out="22:00"; }
@@ -284,6 +293,26 @@
     async function updateVal(n, f, v) {
         if(!dailyData[n]) dailyData[n] = {};
         dailyData[n][f] = v;
+        
+        // Auto Calculate Late Time
+        if(f === 'in') {
+            const shift = dailyData[n].shift;
+            let stdIn = "";
+            if(shift === 'Common') stdIn = "08:00";
+            else if(shift === 'Morning') stdIn = "06:00";
+            else if(shift === 'Evening') stdIn = "14:00";
+            
+            if (stdIn && v && v > stdIn) {
+                let stdDate = new Date("2026-01-01 " + stdIn);
+                let actualDate = new Date("2026-01-01 " + v);
+                let diffMins = Math.round((actualDate - stdDate) / 60000);
+                dailyData[n].late = diffMins > 0 ? diffMins + "m" : "";
+            } else {
+                dailyData[n].late = "";
+            }
+            renderDaily(); // Re-render to show updated late time
+        }
+        
         await db.collection("attendance").doc(document.getElementById('attDate').value).set(dailyData);
     }
 
@@ -380,7 +409,6 @@
         const [y, m] = month.split('-');
         const days = new Date(y, m, 0).getDate();
         
-        // Fetch Attendance for Pres, Abs, OT auto calculation
         const snapA = await db.collection("attendance").get();
         let attStats = {};
         workersList.forEach(w => attStats[w] = { pr: 0, ab: 0, ot: 0 });
@@ -398,7 +426,6 @@
             }
         });
 
-        // Fetch Saved Basic Salaries
         const snapS = await db.collection("salaryData").doc(month).get();
         const savedSalary = snapS.exists ? snapS.data() : {};
 
@@ -478,12 +505,12 @@
         tbody.innerHTML = '';
 
         if(cat === 'attendance') {
-            thead.innerHTML = `<tr><th>Date</th><th>Shift</th><th>IN</th><th>OUT</th><th>OT</th><th>Note</th></tr>`;
+            thead.innerHTML = `<tr><th>Date</th><th>Shift</th><th>IN</th><th>OUT</th><th>Late</th><th>OT</th><th>Note</th></tr>`;
             const snap = await db.collection("attendance").get();
             let records = [];
             snap.forEach(doc => { if(doc.id.startsWith(m) && doc.data()[w]) records.push({ date: doc.id, ...doc.data()[w] }); });
             records.sort((a,b) => a.date.localeCompare(b.date)).forEach(r => {
-                tbody.innerHTML += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${formatAMPM(r.in)}</td><td>${formatAMPM(r.out)}</td><td>${r.ot}</td><td>${r.note||''}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${formatAMPM(r.in)}</td><td>${formatAMPM(r.out)}</td><td>${r.late||'-'}</td><td>${r.ot}</td><td>${r.note||''}</td></tr>`;
             });
         } 
         else if(cat === 'leave') {
