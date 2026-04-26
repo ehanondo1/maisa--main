@@ -30,24 +30,32 @@
         .tab-btn.active { background: var(--primary); color: white; }
 
         .table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: white; padding: 15px; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 800px; }
         th { background: #f8fafc; color: var(--primary); padding: 12px 5px; border-bottom: 2px solid #e2e8f0; }
         td { padding: 8px 4px; border-bottom: 1px solid #f1f5f9; text-align: center; }
         
         input, select { font-size: 11px; padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%; text-align: center; }
         .row-absent { background-color: #fee2e2 !important; }
-        .readonly-cell { background: #f1f5f9; font-weight: bold; border: none !important; }
+        .readonly-cell { background: #f1f5f9; font-weight: bold; border: none !important; color: #1e3a8a; }
         
         .btn-group { display: flex; gap: 10px; margin: 10px 0; }
         .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 12px; }
         .btn-img { background: #475569; }
         .btn-pdf { background: #0f172a; }
-        .btn-save { background: #059669; }
 
         .hidden { display: none !important; }
         .developer-tag { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; }
 
-        @media print { .no-print { display: none !important; } .container { box-shadow: none; width: 100%; } .table-wrapper { border: none; padding: 0; } }
+        /* Print Fixes */
+        @media print { 
+            @page { size: landscape; margin: 10mm; }
+            .no-print { display: none !important; } 
+            .container { box-shadow: none; width: 100%; max-width: 100%; padding: 0; margin: 0; } 
+            .table-wrapper { border: none; padding: 0; overflow: visible !important; }
+            table { width: 100% !important; min-width: auto; table-layout: auto; font-size: 11px; }
+            th, td { border: 1px solid #000 !important; padding: 5px; word-wrap: break-word; }
+            input, select { border: none !important; background: transparent !important; color: #000 !important; font-weight: bold; padding: 0; }
+        }
     </style>
 </head>
 <body>
@@ -63,9 +71,9 @@
 </div>
 
 <div id="mainDashboard" class="container hidden">
-    <div class="header">
+    <div class="header no-print">
         <h1>MAISA ENGINEERING</h1>
-        <button class="no-print" onclick="logout()" style="background:none; border:1px solid #ccc; padding:5px 10px; border-radius:5px;">Logout</button>
+        <button onclick="logout()" style="background:none; border:1px solid #ccc; padding:5px 10px; border-radius:5px; cursor:pointer;">Logout</button>
     </div>
 
     <div class="tabs no-print">
@@ -99,7 +107,7 @@
             <h3 style="text-align:center;">Payroll Summary - <span class="mName"></span></h3>
             <table>
                 <thead>
-                    <tr><th>Name</th><th>Basic</th><th>PerDay</th><th>Days</th><th>Hday</th><th>Leave</th><th>Pres.</th><th>Abs.</th><th>Total Attd</th><th>OT Pay</th><th>Adv(-)</th><th style="background:#fff1f2">Payable</th></tr>
+                    <tr><th>Name</th><th>Basic</th><th>P.Day</th><th>Days</th><th>Hday</th><th>Leave</th><th>Pres.</th><th>Abs.</th><th>Tot Attd</th><th>OT Pay</th><th>Adv(-)</th><th style="background:#fff1f2">Payable</th></tr>
                 </thead>
                 <tbody id="salaryBody"></tbody>
             </table>
@@ -157,8 +165,8 @@
         </div>
         <div id="monthlyArea" class="table-wrapper">
             <h3 id="reportTitle" style="text-align:center;">Monthly Report</h3>
-            <table id="monthlyTable">
-                <thead><tr><th>Date</th><th>Shift</th><th>IN</th><th>OUT</th><th>OT</th><th>Note</th></tr></thead>
+            <table id="monthlyTable" style="max-width: 600px; margin: auto;">
+                <thead id="monthlyHead"></thead>
                 <tbody id="monthlyBody"></tbody>
             </table>
         </div>
@@ -172,7 +180,6 @@
 </div>
 
 <script>
-    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyA1UR6ffnPvYG7GmPzD0TaujwrC1zdUC6c",
       authDomain: "maisa-engineering.firebaseapp.com",
@@ -229,7 +236,7 @@
         return `${h}:${m} ${ampm}`;
     }
 
-    // --- Attendance Logic ---
+    // --- Attendance ---
     async function loadDailyData() {
         const date = document.getElementById('attDate').value;
         document.getElementById('attDispDate').innerText = date;
@@ -280,7 +287,7 @@
         await db.collection("attendance").doc(document.getElementById('attDate').value).set(dailyData);
     }
 
-    // --- Leave Logic ---
+    // --- Leave ---
     async function renderLeave() {
         const month = document.getElementById('leaveMonth').value;
         document.querySelectorAll('.mName').forEach(el => el.innerText = month);
@@ -305,8 +312,8 @@
                 <tr>
                     <td><b>${name}</b></td>
                     <td><input type="number" value="${pBal}" class="readonly-cell" readonly></td>
-                    <td><input type="number" id="le_${i}" value="${d.earned}" oninput="updateL('${name}', ${i})"></td>
-                    <td><input type="number" id="ls_${i}" value="${d.spent}" oninput="updateL('${name}', ${i})"></td>
+                    <td><input type="number" id="le_${i}" value="${d.earned}" onchange="updateL('${name}', ${i})"></td>
+                    <td><input type="number" id="ls_${i}" value="${d.spent}" onchange="updateL('${name}', ${i})"></td>
                     <td><input type="number" id="lt_${i}" value="${total}" class="readonly-cell" readonly></td>
                 </tr>`;
         });
@@ -323,7 +330,7 @@
         globalLeave[name] = s;
     }
 
-    // --- Advance Logic ---
+    // --- Advance ---
     async function renderAdvance() {
         const month = document.getElementById('advanceMonth').value;
         const tbody = document.getElementById('advanceBody');
@@ -347,8 +354,8 @@
                 <tr>
                     <td><b>${name}</b></td>
                     <td><input type="number" value="${pDue}" class="readonly-cell" readonly></td>
-                    <td><input type="number" id="at_${i}" value="${d.taken}" oninput="updateA('${name}', ${i})"></td>
-                    <td><input type="number" id="ad_${i}" value="${d.ded}" oninput="updateA('${name}', ${i})"></td>
+                    <td><input type="number" id="at_${i}" value="${d.taken}" onchange="updateA('${name}', ${i})"></td>
+                    <td><input type="number" id="ad_${i}" value="${d.ded}" onchange="updateA('${name}', ${i})"></td>
                     <td><input type="number" id="ar_${i}" value="${rem}" class="readonly-cell" readonly></td>
                 </tr>`;
         });
@@ -365,66 +372,108 @@
         globalAdv[name] = d;
     }
 
-    // --- Salary Sync ---
+    // --- Salary (Synced & Auto Calculated) ---
     async function syncAndRenderSalary() {
         await renderLeave();
         await renderAdvance();
         const month = document.getElementById('salaryMonth').value;
         const [y, m] = month.split('-');
         const days = new Date(y, m, 0).getDate();
+        
+        // Fetch Attendance for Pres, Abs, OT auto calculation
+        const snapA = await db.collection("attendance").get();
+        let attStats = {};
+        workersList.forEach(w => attStats[w] = { pr: 0, ab: 0, ot: 0 });
+        snapA.forEach(doc => {
+            if(doc.id.startsWith(month)) {
+                workersList.forEach(w => {
+                    if(doc.data()[w]) {
+                        const shift = doc.data()[w].shift;
+                        const ot = parseFloat(doc.data()[w].ot) || 0;
+                        if(shift === 'Absent') attStats[w].ab++;
+                        else if(['Common', 'Morning', 'Evening'].includes(shift)) attStats[w].pr++;
+                        attStats[w].ot += ot;
+                    }
+                });
+            }
+        });
+
+        // Fetch Saved Basic Salaries
+        const snapS = await db.collection("salaryData").doc(month).get();
+        const savedSalary = snapS.exists ? snapS.data() : {};
+
         const tbody = document.getElementById('salaryBody');
         tbody.innerHTML = '';
 
         workersList.sort().forEach((name, i) => {
             const lValue = globalLeave[name] || 0;
             const aValue = globalAdv[name] || 0;
+            const baseVal = savedSalary[name]?.basic || "";
+            const hdayVal = savedSalary[name]?.hday || 0;
+            const prVal = attStats[name].pr;
+            const abVal = attStats[name].ab;
+            const otHrs = attStats[name].ot;
+
             tbody.innerHTML += `
                 <tr>
-                    <td><b>${name}</b></td>
-                    <td><input type="number" id="s_base_${i}" oninput="calcS(${i}, ${days})"></td>
+                    <td style="text-align:left"><b>${name}</b></td>
+                    <td><input type="number" id="s_base_${i}" value="${baseVal}" placeholder="0" onchange="calcS(${i}, ${days}, '${name}', ${otHrs})"></td>
                     <td><input type="text" id="s_pd_${i}" class="readonly-cell" readonly></td>
                     <td>${days}</td>
-                    <td><input type="number" id="s_hd_${i}" value="0" oninput="calcS(${i}, ${days})"></td>
+                    <td><input type="number" id="s_hd_${i}" value="${hdayVal}" onchange="calcS(${i}, ${days}, '${name}', ${otHrs})"></td>
                     <td><input type="number" id="s_lv_${i}" value="${lValue}" class="readonly-cell" readonly></td>
-                    <td><input type="number" id="s_pr_${i}" value="0" oninput="calcS(${i}, ${days})"></td>
-                    <td><input type="number" id="s_ab_${i}" value="0" oninput="calcS(${i}, ${days})"></td>
+                    <td><input type="number" id="s_pr_${i}" value="${prVal}" class="readonly-cell" readonly></td>
+                    <td><input type="number" id="s_ab_${i}" value="${abVal}" class="readonly-cell" readonly></td>
                     <td><input type="text" id="s_ta_${i}" class="readonly-cell" readonly></td>
-                    <td><input type="text" id="s_otp_${i}" class="readonly-cell" value="0.00" readonly></td>
+                    <td><input type="text" id="s_otp_${i}" class="readonly-cell" readonly></td>
                     <td><input type="number" id="s_adv_${i}" value="${aValue}" class="readonly-cell" readonly></td>
                     <td><input type="text" id="s_np_${i}" class="readonly-cell" style="color:red" readonly></td>
                 </tr>`;
+                
+            if(baseVal) setTimeout(() => calcS(i, days, name, otHrs), 100);
         });
     }
 
-    function calcS(i, days) {
+    function calcS(i, days, name, otHrs) {
         const base = parseFloat(document.getElementById(`s_base_${i}`).value) || 0;
         const hd = parseFloat(document.getElementById(`s_hd_${i}`).value) || 0;
         const lv = parseFloat(document.getElementById(`s_lv_${i}`).value) || 0;
         const pr = parseFloat(document.getElementById(`s_pr_${i}`).value) || 0;
         const ab = parseFloat(document.getElementById(`s_ab_${i}`).value) || 0;
         const adv = parseFloat(document.getElementById(`s_adv_${i}`).value) || 0;
+        
         const pd = base / days;
         const ta = (hd + lv + pr) - ab;
-        const net = (pd * ta) - adv;
+        const otPay = (pd / 8) * otHrs;
+        const net = (pd * ta) + otPay - adv;
+        
         document.getElementById(`s_pd_${i}`).value = pd.toFixed(2);
         document.getElementById(`s_ta_${i}`).value = ta;
+        document.getElementById(`s_otp_${i}`).value = otPay.toFixed(2);
         document.getElementById(`s_np_${i}`).value = net.toFixed(2);
+
+        const month = document.getElementById('salaryMonth').value;
+        db.collection("salaryData").doc(month).set({
+            [name]: { basic: base, hday: hd }
+        }, {merge: true});
     }
 
-    // --- Monthly Report (Category Filter) ---
+    // --- Monthly Report ---
     async function renderMonthly() {
         const w = document.getElementById('mWorkerSelect').value;
         const m = document.getElementById('mMonth').value;
         const cat = document.getElementById('mCategory').value;
         
+        if(!w) return;
+
         let catName = "Attendance";
-        if(cat === 'leave') catName = "Leave";
+        if(cat === 'leave') catName = "Leave Mgmt";
         if(cat === 'advance') catName = "Advance";
-        if(cat === 'salary') catName = "Salary";
+        if(cat === 'salary') catName = "Salary Summary";
 
         document.getElementById('reportTitle').innerText = `Report: ${w} (${m}) - ${catName}`;
         
-        const thead = document.querySelector('#monthlyTable thead');
+        const thead = document.getElementById('monthlyHead');
         const tbody = document.getElementById('monthlyBody');
         tbody.innerHTML = '';
 
@@ -438,28 +487,61 @@
             });
         } 
         else if(cat === 'leave') {
-            thead.innerHTML = `<tr><th>Description</th><th>Days</th></tr>`;
+            thead.innerHTML = `<tr><th style="text-align:left">Description</th><th>Days</th></tr>`;
             const snap = await db.collection("leaveData").doc(m).get();
             const d = snap.exists && snap.data()[w] ? snap.data()[w] : { earned: 0, spent: 0, total: 0 };
-            tbody.innerHTML += `<tr><td>Earned this month (+)</td><td>${d.earned||0}</td></tr>`;
-            tbody.innerHTML += `<tr><td>Spent this month (-)</td><td>${d.spent||0}</td></tr>`;
-            tbody.innerHTML += `<tr style="background:#eef2ff"><td><b>Total Remaining</b></td><td><b>${d.total||0}</b></td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Earned this month (+)</td><td>${d.earned||0}</td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Spent this month (-)</td><td>${d.spent||0}</td></tr>`;
+            tbody.innerHTML += `<tr style="background:#eef2ff"><td style="text-align:left"><b>Total Remaining</b></td><td><b>${d.total||0}</b></td></tr>`;
         }
         else if(cat === 'advance') {
-            thead.innerHTML = `<tr><th>Description</th><th>Amount</th></tr>`;
+            thead.innerHTML = `<tr><th style="text-align:left">Description</th><th>Amount (৳)</th></tr>`;
             const snap = await db.collection("advData").doc(m).get();
             const d = snap.exists && snap.data()[w] ? snap.data()[w] : { taken: 0, ded: 0, rem: 0 };
-            tbody.innerHTML += `<tr><td>Taken this month (+)</td><td>${d.taken||0}</td></tr>`;
-            tbody.innerHTML += `<tr><td>Deduction (-)</td><td>${d.ded||0}</td></tr>`;
-            tbody.innerHTML += `<tr style="background:#fff1f2"><td><b>Remaining Due</b></td><td><b>${d.rem||0}</b></td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Taken this month (+)</td><td>${d.taken||0}</td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Deduction (-)</td><td>${d.ded||0}</td></tr>`;
+            tbody.innerHTML += `<tr style="background:#fff1f2"><td style="text-align:left"><b>Remaining Due</b></td><td><b>${d.rem||0}</b></td></tr>`;
         }
         else if(cat === 'salary') {
-            thead.innerHTML = `<tr><th>Notice</th></tr>`;
-            tbody.innerHTML += `<tr><td>Please check the main 'Salary' tab for full payroll calculation.</td></tr>`;
+            thead.innerHTML = `<tr><th style="text-align:left">Description (বিবরণ)</th><th>Amount (পরিমাণ)</th></tr>`;
+            
+            const days = new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
+            const snapA = await db.collection("attendance").get();
+            let pr = 0, ab = 0, ot = 0;
+            snapA.forEach(doc => { 
+                if(doc.id.startsWith(m) && doc.data()[w]) {
+                    const shift = doc.data()[w].shift;
+                    if(shift === 'Absent') ab++;
+                    else if(['Common', 'Morning', 'Evening'].includes(shift)) pr++;
+                    ot += parseFloat(doc.data()[w].ot) || 0;
+                }
+            });
+
+            const snapS = await db.collection("salaryData").doc(m).get();
+            const base = snapS.exists && snapS.data()[w] ? parseFloat(snapS.data()[w].basic) || 0 : 0;
+            const hd = snapS.exists && snapS.data()[w] ? parseFloat(snapS.data()[w].hday) || 0 : 0;
+            
+            const snapL = await db.collection("leaveData").doc(m).get();
+            const lv = snapL.exists && snapL.data()[w] ? parseFloat(snapL.data()[w].spent) || 0 : 0;
+            
+            const snapAdv = await db.collection("advData").doc(m).get();
+            const adv = snapAdv.exists && snapAdv.data()[w] ? parseFloat(snapAdv.data()[w].ded) || 0 : 0;
+
+            const pd = base / days;
+            const otPay = (pd / 8) * ot;
+            const ta = (hd + lv + pr) - ab;
+            const net = (pd * ta) + otPay - adv;
+
+            tbody.innerHTML += `<tr><td style="text-align:left">Basic Salary</td><td>৳ ${base.toFixed(2)}</td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Per Day Rate</td><td>৳ ${pd.toFixed(2)}</td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Total Attendance</td><td>${ta} Days</td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Overtime Hours</td><td>${ot} Hrs</td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Overtime Pay (+)</td><td>৳ ${otPay.toFixed(2)}</td></tr>`;
+            tbody.innerHTML += `<tr><td style="text-align:left">Advance Deduction (-)</td><td>৳ ${adv.toFixed(2)}</td></tr>`;
+            tbody.innerHTML += `<tr style="background:#fff1f2"><td style="text-align:left"><b>Net Payable Salary</b></td><td><b>৳ ${net.toFixed(2)}</b></td></tr>`;
         }
     }
 
-    // Navigation & Export
     function showPage(p) {
         document.querySelectorAll('.page').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -469,7 +551,7 @@
         if(p === 'leave') renderLeave();
         if(p === 'advance') renderAdvance();
         if(p === 'monthly') {
-            document.getElementById('mWorkerSelect').innerHTML = workersList.sort().map(w => `<option value="${w}">${w}</option>`).join('');
+            document.getElementById('mWorkerSelect').innerHTML = '<option value="">Select Worker</option>' + workersList.sort().map(w => `<option value="${w}">${w}</option>`).join('');
             renderMonthly();
         }
     }
