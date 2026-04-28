@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAISA HR Pro - Smart System</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root { --primary: #0f172a; --accent: #3b82f6; --success: #22c55e; --danger: #ef4444; --bg: #f1f5f9; }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        body { font-family: 'Poppins', 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding: 0; }
+
+        .sidebar { height: 100vh; width: 260px; position: fixed; z-index: 1000; top: 0; left: -260px; background: var(--primary); transition: 0.3s; padding-top: 20px; }
+        .sidebar.active { left: 0; }
+        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 12px; }
+        .sidebar a:hover { background: #1e293b; color: white; }
+
+        .top-nav { background: white; padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 900; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .container { max-width: 1350px; margin: 20px auto; padding: 0 15px; }
+
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: 12px; }
+        th { background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; color: #475569; }
+        td { padding: 8px; border: 1px solid #e2e8f0; text-align: center; }
+
+        .row-present { background-color: #dcfce7 !important; }
+        .row-absent { background-color: #fee2e2 !important; }
+        .row-leave { background-color: #fef9c3 !important; }
+
+        input, select { padding: 5px; border-radius: 5px; border: 1px solid #cbd5e1; width: 100%; text-align: center; outline: none; }
+        .readonly-cell { background: #f8fafc; border: none !important; font-weight: bold; }
+
+        .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; border: none; color: white; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-img { background: #4b5563; }
+        .btn-pdf { background: var(--primary); }
+
+        @media print { .no-print { display: none !important; } .container { width: 100% !important; max-width: 100% !important; } @page { size: A4 landscape; margin: 5mm; } }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar" class="sidebar no-print">
+    <div style="text-align:right; padding:10px;"><i class="fas fa-times" style="color:white; cursor:pointer;" onclick="toggleSidebar()"></i></div>
+    <a href="#" onclick="showPage('daily')"><i class="fas fa-clock"></i> Attendance</a>
+    <a href="#" onclick="showPage('salary')"><i class="fas fa-money-check-alt"></i> Salary Sheet</a>
+    <a href="#" onclick="showPage('leave')"><i class="fas fa-calendar-minus"></i> Leave Mgmt</a>
+    <a href="#" onclick="showPage('advance')"><i class="fas fa-hand-holding-usd"></i> Advance</a>
+    <a href="#" onclick="showPage('monthly')"><i class="fas fa-file-alt"></i> Monthly Report</a>
+    <a href="#" onclick="showPage('settings')"><i class="fas fa-cog"></i> Settings</a>
+    <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+
+<div id="loginPage" style="height:100vh; display:flex; align-items:center; justify-content:center; background:#0f172a;">
+    <div style="background:white; padding:40px; border-radius:20px; width:320px; text-align:center;">
+        <h2>MAISA ADMIN</h2>
+        <input type="email" id="adminEmail" placeholder="Email" style="margin-bottom:10px; text-align:left;">
+        <input type="password" id="adminPass" placeholder="Password" style="margin-bottom:20px; text-align:left;">
+        <button onclick="login()" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:10px;">LOGIN</button>
+    </div>
+</div>
+
+<div id="mainDashboard" class="hidden">
+    <div class="top-nav no-print">
+        <i class="fas fa-bars" style="font-size:20px; cursor:pointer;" onclick="toggleSidebar()"></i>
+        <h2 style="font-size:18px; margin:0;">MAISA ENGINEERING</h2>
+        <div id="activePageName" style="color:var(--accent); font-weight:bold;">DASHBOARD</div>
+    </div>
+
+    <div class="container">
+        <!-- Daily Attendance -->
+        <div id="dailyPage" class="page">
+            <div class="card">
+                <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <input type="date" id="attDate" onchange="loadDailyData()" style="width:150px;">
+                    <div class="btn-group">
+                        <button class="btn-sm btn-img" onclick="exportDoc('dailyArea')"><i class="fas fa-image"></i> PNG</button>
+                        <button class="btn-sm btn-pdf" onclick="window.print()"><i class="fas fa-print"></i> PRINT</button>
+                    </div>
+                </div>
+                <div id="dailyArea">
+                    <h3 style="text-align:center;">Daily Attendance: <span id="attDispDate"></span></h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>SI</th><th style="text-align:left">Worker Name</th><th>Shift</th><th>IN (AM/PM)</th><th>OUT (AM/PM)</th><th>Late</th><th>OT</th><th>Note</th></tr>
+                            </thead>
+                            <tbody id="dailyBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salary Sheet -->
+        <div id="salaryPage" class="page hidden">
+            <div class="card">
+                <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <input type="month" id="salaryMonth" onchange="renderSalary()" style="width:150px;">
+                    <div class="btn-group">
+                        <button class="btn-sm btn-img" onclick="exportDoc('salaryArea')"><i class="fas fa-image"></i> PNG</button>
+                        <button class="btn-sm btn-pdf" onclick="window.print()"><i class="fas fa-print"></i> PRINT</button>
+                    </div>
+                </div>
+                <div id="salaryArea">
+                    <h3 style="text-align:center;">Salary Sheet - <span id="salDispMonth"></span></h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>Name</th><th>Basic</th><th>P.Day</th><th>Days</th><th>Hday</th><th>Leave</th><th>Pres.</th><th>Abs.</th><th>Total</th><th>Tot OT</th><th>OT Pay</th><th>Adv</th><th>Net Pay</th></tr>
+                            </thead>
+                            <tbody id="salaryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Page -->
+        <div id="leavePage" class="page hidden">
+            <div class="card">
+                <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <input type="month" id="leaveMonth" onchange="renderLeave()" style="width:150px;">
+                    <div class="btn-group">
+                        <button class="btn-sm btn-img" onclick="exportDoc('leaveArea')"><i class="fas fa-image"></i> PNG</button>
+                    </div>
+                </div>
+                <div id="leaveArea">
+                    <h3 style="text-align:center;">Leave Management</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>Worker Name</th><th>Prev. Balance</th><th>Earned (+)</th><th>Spent (-)</th><th>Remaining</th></tr>
+                            </thead>
+                            <tbody id="leaveBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advance Page -->
+        <div id="advancePage" class="page hidden">
+            <div class="card">
+                <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <input type="month" id="advanceMonth" onchange="renderAdvance()" style="width:150px;">
+                    <div class="btn-group">
+                        <button class="btn-sm btn-img" onclick="exportDoc('advanceArea')"><i class="fas fa-image"></i> PNG</button>
+                    </div>
+                </div>
+                <div id="advanceArea">
+                    <h3 style="text-align:center;">Advance Records</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>Worker Name</th><th>Prev. Due</th><th>Taken (+)</th><th>Paid (-)</th><th>Balance Due</th></tr>
+                            </thead>
+                            <tbody id="advanceBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Report & Settings ... (Same as before) -->
+        <div id="settingsPage" class="page hidden">
+            <div class="card" style="max-width:600px; margin:auto;">
+                <h3>Worker List</h3>
+                <div style="display:flex; gap:10px; margin-bottom:20px;"><input type="text" id="newWorkerName" placeholder="Name"><button onclick="addWorker()">Add</button></div>
+                <div id="workerListItems"></div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA1UR6ffnPvYG7GmPzD0TaujwrC1zdUC6c",
+      authDomain: "maisa-engineering.firebaseapp.com",
+      projectId: "maisa-engineering",
+      storageBucket: "maisa-engineering.firebasestorage.app",
+      messagingSenderId: "1080011179433",
+      appId: "1:1080011179433:web:28cc51a76f425c603f70b8"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    let workersList = [];
+    let dailyData = {};
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+    function format12H(t) { if(!t) return "--"; let [h,m]=t.split(':'); h=parseInt(h); let ap=h>=12?'PM':'AM'; h=h%12||12; return `${h}:${m} ${ap}`; }
+
+    auth.onAuthStateChanged(user => {
+        if(user) { document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainDashboard').classList.remove('hidden'); initApp(); }
+        else { document.getElementById('loginPage').classList.remove('hidden'); document.getElementById('mainDashboard').classList.add('hidden'); }
+    });
+
+    async function login() { 
+        const e = document.getElementById('adminEmail').value;
+        const p = document.getElementById('adminPass').value;
+        try { await auth.signInWithEmailAndPassword(e, p); } catch(err) { alert("Login Error!"); }
+    }
+    function logout() { auth.signOut(); }
+
+    async function initApp() {
+        const now = new Date();
+        document.getElementById('attDate').valueAsDate = now;
+        const mStr = now.toISOString().slice(0,7);
+        ['salaryMonth', 'leaveMonth', 'advanceMonth'].forEach(id => document.getElementById(id).value = mStr);
+        await fetchWorkers();
+        loadDailyData();
+    }
+
+    async function fetchWorkers() {
+        const doc = await db.collection("settings").doc("workers").get();
+        workersList = doc.exists ? doc.data().list : [];
+        renderWorkerSettings();
+    }
+
+    function showPage(p) {
+        document.querySelectorAll('.page').forEach(el => el.classList.add('hidden'));
+        document.getElementById(p + 'Page').classList.remove('hidden');
+        document.getElementById('activePageName').innerText = p.toUpperCase();
+        toggleSidebar();
+        if(p === 'salary') renderSalary();
+        if(p === 'leave') renderLeave();
+        if(p === 'advance') renderAdvance();
+    }
+
+    // --- LEAVE LOGIC (Carry Forward) ---
+    async function renderLeave() {
+        const m = document.getElementById('leaveMonth').value;
+        let d = new Date(m + "-01"); d.setMonth(d.getMonth()-1);
+        let pm = d.toISOString().slice(0,7);
+        
+        const pDoc = await db.collection("leaveData").doc(pm).get();
+        const cDoc = await db.collection("leaveData").doc(m).get();
+        const pData = pDoc.exists ? pDoc.data() : {};
+        const cData = cDoc.exists ? cDoc.data() : {};
+
+        document.getElementById('leaveBody').innerHTML = workersList.map(name => {
+            const prevRem = pData[name]?.rem || 0;
+            const cur = cData[name] || { earned: 1, spent: 0 };
+            const rem = (parseFloat(prevRem) + parseFloat(cur.earned)) - parseFloat(cur.spent);
+            return `<tr><td>${name}</td><td>${prevRem}</td>
+                <td><input type="number" value="${cur.earned}" onchange="saveLeave('${name}','earned',this.value)"></td>
+                <td><input type="number" value="${cur.spent}" onchange="saveLeave('${name}','spent',this.value)"></td>
+                <td class="readonly-cell">${rem}</td></tr>`;
+        }).join('');
+    }
+
+    async function saveLeave(n, f, v) {
+        const m = document.getElementById('leaveMonth').value;
+        let d = new Date(m + "-01"); d.setMonth(d.getMonth()-1);
+        let pm = d.toISOString().slice(0,7);
+        const pDoc = await db.collection("leaveData").doc(pm).get();
+        const pData = pDoc.exists ? pDoc.data() : {};
+        const prevRem = pData[n]?.rem || 0;
+
+        const cDoc = await db.collection("leaveData").doc(m).get();
+        const cData = cDoc.exists ? cDoc.data() : {};
+        const cur = cData[n] || { earned: 1, spent: 0 };
+        cur[f] = parseFloat(v);
+        const rem = (parseFloat(prevRem) + parseFloat(cur.earned)) - parseFloat(cur.spent);
+        
+        await db.collection("leaveData").doc(m).set({ [n]: { ...cur, rem: rem, prev: prevRem } }, {merge:true});
+        renderLeave();
+    }
+
+    // --- ADVANCE LOGIC (Carry Forward) ---
+    async function renderAdvance() {
+        const m = document.getElementById('advanceMonth').value;
+        let d = new Date(m + "-01"); d.setMonth(d.getMonth()-1);
+        let pm = d.toISOString().slice(0,7);
+
+        const pDoc = await db.collection("advData").doc(pm).get();
+        const cDoc = await db.collection("advData").doc(m).get();
+        const pData = pDoc.exists ? pDoc.data() : {};
+        const cData = cDoc.exists ? cDoc.data() : {};
+
+        document.getElementById('advanceBody').innerHTML = workersList.map(name => {
+            const prevDue = pData[name]?.bal || 0;
+            const cur = cData[name] || { taken: 0, paid: 0 };
+            const bal = (parseFloat(prevDue) + parseFloat(cur.taken)) - parseFloat(cur.paid);
+            return `<tr><td>${name}</td><td>${prevDue}</td>
+                <td><input type="number" value="${cur.taken}" onchange="saveAdv('${name}','taken',this.value)"></td>
+                <td><input type="number" value="${cur.paid}" onchange="saveAdv('${name}','paid',this.value)"></td>
+                <td class="readonly-cell">${bal}</td></tr>`;
+        }).join('');
+    }
+
+    async function saveAdv(n, f, v) {
+        const m = document.getElementById('advanceMonth').value;
+        let d = new Date(m + "-01"); d.setMonth(d.getMonth()-1);
+        let pm = d.toISOString().slice(0,7);
+        const pDoc = await db.collection("advData").doc(pm).get();
+        const pData = pDoc.exists ? pDoc.data() : {};
+        const prevDue = pData[n]?.bal || 0;
+
+        const cDoc = await db.collection("advData").doc(m).get();
+        const cData = cDoc.exists ? cDoc.data() : {};
+        const cur = cData[n] || { taken: 0, paid: 0 };
+        cur[f] = parseFloat(v);
+        const bal = (parseFloat(prevDue) + parseFloat(cur.taken)) - parseFloat(cur.paid);
+
+        await db.collection("advData").doc(m).set({ [n]: { ...cur, bal: bal, prev: prevDue } }, {merge:true});
+        renderAdvance();
+    }
+
+    // --- SALARY LOGIC (Auto Sync) ---
+    async function renderSalary() {
+        const m = document.getElementById('salaryMonth').value;
+        document.getElementById('salDispMonth').innerText = m;
+        
+        const [y, mm] = m.split('-'); const daysInM = new Date(y, mm, 0).getDate();
+        const attSnap = await db.collection("attendance").get();
+        const lvDoc = await db.collection("leaveData").doc(m).get();
+        const advDoc = await db.collection("advData").doc(m).get();
+        const salDoc = await db.collection("salaryData").doc(m).get();
+
+        const lvData = lvDoc.exists ? lvDoc.data() : {};
+        const advData = advDoc.exists ? advDoc.data() : {};
+        const salSaved = salDoc.exists ? salDoc.data() : {};
+
+        let stats = {}; workersList.forEach(w => stats[w] = { pr: 0, ab: 0, ot: 0 });
+        attSnap.forEach(doc => {
+            if(doc.id.startsWith(m)) {
+                workersList.forEach(w => {
+                    const d = doc.data()[w];
+                    if(d) {
+                        if(['Common','Morning','Evening'].includes(d.shift)) stats[w].pr++;
+                        if(d.shift === 'Absent') stats[w].ab++;
+                        stats[w].ot += parseFloat(d.ot) || 0;
+                    }
+                });
+            }
+        });
+
+        document.getElementById('salaryBody').innerHTML = workersList.map(name => {
+            const basic = salSaved[name]?.basic || 0;
+            const hd = salSaved[name]?.hd || 0;
+            const lvSpent = lvData[name]?.spent || 0;
+            const advPaid = advData[name]?.paid || 0;
+            const pd = basic / daysInM;
+            const totAtt = stats[name].pr + hd + lvSpent;
+            const otPay = (pd / 8) * stats[name].ot;
+            const net = (pd * totAtt) - advPaid + otPay;
+
+            return `<tr><td><b>${name}</b></td>
+                <td><input type="number" value="${basic}" onchange="saveSal('${name}','basic',this.value)"></td>
+                <td class="readonly-cell">${pd.toFixed(2)}</td><td>${daysInM}</td>
+                <td><input type="number" value="${hd}" onchange="saveSal('${name}','hd',this.value)"></td>
+                <td class="readonly-cell">${lvSpent}</td><td>${stats[name].pr}</td><td>${stats[name].ab}</td>
+                <td class="readonly-cell">${totAtt}</td><td class="readonly-cell">${stats[name].ot}</td>
+                <td class="readonly-cell">${otPay.toFixed(2)}</td><td class="readonly-cell">${advPaid}</td>
+                <td class="readonly-cell" style="color:red; font-weight:bold;">${net.toFixed(2)}</td></tr>`;
+        }).join('');
+    }
+
+    async function saveSal(n, f, v) {
+        const m = document.getElementById('salaryMonth').value;
+        await db.collection("salaryData").doc(m).set({ [n]: { [f]: parseFloat(v) } }, {merge:true});
+        renderSalary();
+    }
+
+    // --- Attendance & Export Logic (Same as before) ---
+    async function loadDailyData() {
+        const date = document.getElementById('attDate').value;
+        document.getElementById('attDispDate').innerText = date;
+        const doc = await db.collection("attendance").doc(date).get();
+        dailyData = doc.exists ? doc.data() : {};
+        renderDaily();
+    }
+
+    function renderDaily() {
+        const tbody = document.getElementById('dailyBody');
+        tbody.innerHTML = workersList.map((name, i) => {
+            const d = dailyData[name] || { shift: "None", in: "", out: "", late: "", ot: 0, note: "" };
+            let rowCls = d.shift === 'Absent' ? 'row-absent' : (d.shift === 'Leave' ? 'row-leave' : (['Common','Morning','Evening'].includes(d.shift) ? 'row-present' : ''));
+            return `<tr class="${rowCls}"><td>${i+1}</td><td style="text-align:left; font-weight:bold;">${name}</td>
+                <td><select onchange="updateShift('${name}', this.value)">
+                    <option value="None" ${d.shift=='None'?'selected':''}>Select</option>
+                    <option value="Common" ${d.shift=='Common'?'selected':''}>Common</option>
+                    <option value="Morning" ${d.shift=='Morning'?'selected':''}>Morning</option>
+                    <option value="Evening" ${d.shift=='Evening'?'selected':''}>Evening</option>
+                    <option value="Leave" ${d.shift=='Leave'?'selected':''}>Leave</option>
+                    <option value="Absent" ${d.shift=='Absent'?'selected':''}>Absent</option>
+                </select></td>
+                <td><input type="time" value="${d.in}" onchange="calcAtt('${name}','in',this.value)"></td>
+                <td><input type="time" value="${d.out}" onchange="calcAtt('${name}','out',this.value)"></td>
+                <td class="readonly-cell">${d.late||''}</td><td class="readonly-cell">${d.ot||0}</td>
+                <td><input type="text" value="${d.note||''}" onchange="updateVal('${name}','note',this.value)"></td></tr>`;
+        }).join('');
+    }
+
+    async function updateShift(n, s) {
+        if(!dailyData[n]) dailyData[n] = {};
+        dailyData[n].shift = s;
+        if(s === 'Common') { dailyData[n].in = "08:00"; dailyData[n].out = "17:00"; }
+        else if(s === 'Morning') { dailyData[n].in = "06:00"; dailyData[n].out = "14:00"; }
+        else if(s === 'Evening') { dailyData[n].in = "14:00"; dailyData[n].out = "22:00"; }
+        else { dailyData[n].in = ""; dailyData[n].out = ""; dailyData[n].late = ""; dailyData[n].ot = 0; }
+        calcAtt(n, 'in', dailyData[n].in);
+    }
+
+    async function calcAtt(n, f, v) {
+        dailyData[n][f] = v;
+        const shift = dailyData[n].shift;
+        const sIn = shift==='Common'?"08:00":shift==='Morning'?"06:00":shift==='Evening'?"14:00":null;
+        const sOut = shift==='Common'?"17:00":shift==='Morning'?"14:00":shift==='Evening'?"22:00":null;
+        if(sIn && dailyData[n].in > sIn) { let diff = (new Date("2000-01-01 "+dailyData[n].in) - new Date("2000-01-01 "+sIn)) / 60000; dailyData[n].late = diff + "m"; } else dailyData[n].late = "";
+        if(sOut && dailyData[n].out > sOut) { let diff = (new Date("2000-01-01 "+dailyData[n].out) - new Date("2000-01-01 "+sOut)) / 3600000; dailyData[n].ot = diff.toFixed(1); } else dailyData[n].ot = 0;
+        await db.collection("attendance").doc(document.getElementById('attDate').value).set(dailyData);
+        renderDaily();
+    }
+
+    async function updateVal(n, f, v) { dailyData[n][f] = v; await db.collection("attendance").doc(document.getElementById('attDate').value).set(dailyData); }
+
+    function exportDoc(id) {
+        const el = document.getElementById(id);
+        html2canvas(el, { scale: 2, useCORS: true, onclone: (cloned) => {
+            cloned.querySelectorAll('input, select').forEach(i => {
+                let s = cloned.createElement('span');
+                s.innerText = i.type === 'time' ? format12H(i.value) : i.value;
+                i.parentNode.replaceChild(s, i);
+            });
+        }}).then(canvas => { const link = document.createElement('a'); link.download = `MAISA_Report.png`; link.href = canvas.toDataURL(); link.click(); });
+    }
+
+    async function addWorker() { const n = document.getElementById('newWorkerName').value; if(!n) return; workersList.push(n); await db.collection("settings").doc("workers").set({ list: workersList }); document.getElementById('newWorkerName').value = ''; fetchWorkers(); }
+    function renderWorkerSettings() { document.getElementById('workerListItems').innerHTML = workersList.map(w => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;"><span>${w}</span><i class="fas fa-trash" style="color:red; cursor:pointer;" onclick="delWorker('${w}')"></i></div>`).join(''); }
+    async function delWorker(n) { workersList = workersList.filter(x => x !== n); await db.collection("settings").doc("workers").set({ list: workersList }); fetchWorkers(); }
+</script>
+</body>
+</html>
